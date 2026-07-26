@@ -5,7 +5,7 @@
 # Prerequisites:
 #   - git remote pointing at https://github.com/enesyaks/KeyboardCleaner.git
 #   - GitHub CLI (gh) authenticated, OR upload the zip manually on github.com
-#   - Run package.sh or notarize.sh first so dist/KeyboardCleaner-VERSION.zip exists
+#   - Run package.sh first so dist/KeyboardCleaner-VERSION.zip exists
 #
 # Usage:
 #   ./Scripts/release.sh           # uses version from Info.plist
@@ -28,7 +28,7 @@ fi
 
 if [[ ! -f "$ZIP_PATH" ]]; then
   echo "error: Missing $ZIP_PATH"
-  echo "  Run ./Scripts/notarize.sh (recommended) or ./Scripts/package.sh first."
+  echo "  Run ./Scripts/package.sh first."
   exit 1
 fi
 

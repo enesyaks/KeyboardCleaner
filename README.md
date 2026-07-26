@@ -49,38 +49,15 @@ open .build/KeyboardCleaner.app
 
 ### Release (maintainers)
 
-1. **One-time Apple setup**
-   - In Xcode → Settings → Accounts, download **Developer ID Application** certificate
-   - Create an [app-specific password](https://appleid.apple.com)
-   - Store notary credentials:
-     ```bash
-     xcrun notarytool store-credentials "KeyboardCleaner-notary" \
-       --apple-id "YOUR_APPLE_ID" \
-       --team-id "YOUR_TEAM_ID" \
-       --password "app-specific-password"
-     ```
-
-2. **Sign, notarize, and package**
-   ```bash
-   export CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)"
-   ./Scripts/notarize.sh
-   ```
-
-3. **Publish GitHub release + refresh Homebrew cask**
-   ```bash
-   ./Scripts/release.sh
-   git add Casks/keyboard-cleaner.rb
-   git commit -m "Update Homebrew cask for v1.0.0"
-   git push
-   ```
-
-   Without GitHub CLI, run `./Scripts/release.sh --skip-upload`, then upload `dist/KeyboardCleaner-VERSION.zip` on the Releases page manually.
-
-Ad-hoc local package (no notarization):
-
 ```bash
 ./Scripts/package.sh
+./Scripts/release.sh
+git add Casks/keyboard-cleaner.rb
+git commit -m "Update Homebrew cask for v1.0.0"
+git push
 ```
+
+Without GitHub CLI, run `./Scripts/release.sh --skip-upload`, then upload `dist/KeyboardCleaner-VERSION.zip` on the Releases page manually.
 
 ## License
 

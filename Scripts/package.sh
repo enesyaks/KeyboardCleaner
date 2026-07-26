@@ -13,16 +13,6 @@ ZIP_PATH="$DIST_DIR/$ZIP_NAME"
 
 "$ROOT/Scripts/build.sh"
 
-# Re-sign for distribution if Developer ID is available (optional here;
-# Scripts/notarize.sh does the full Developer ID + notarize flow).
-if [[ -n "${CODESIGN_IDENTITY:-}" ]]; then
-  echo "==> Signing with \$CODESIGN_IDENTITY"
-  codesign --force --deep --options runtime \
-    --entitlements "$ROOT/Resources/KeyboardCleaner.entitlements" \
-    --sign "$CODESIGN_IDENTITY" \
-    "$APP_DIR"
-fi
-
 echo "==> Creating zip"
 rm -rf "$DIST_DIR"
 mkdir -p "$DIST_DIR"
@@ -35,3 +25,4 @@ echo "==> Package ready"
 echo "    Zip:  $ZIP_PATH"
 echo "    SHA256: $SHA"
 echo "    Version: $VERSION"
+echo "    Next: ./Scripts/release.sh"
