@@ -20,6 +20,8 @@ SOURCES=(
   "$ROOT/Sources/KeyboardCleaner/LaunchAtLogin.swift"
   "$ROOT/Sources/KeyboardCleaner/AppSettings.swift"
   "$ROOT/Sources/KeyboardCleaner/AppState.swift"
+  "$ROOT/Sources/KeyboardCleaner/Feedback.swift"
+  "$ROOT/Sources/KeyboardCleaner/LockOverlay.swift"
   "$ROOT/Sources/KeyboardCleaner/MenuBarPanel.swift"
   "$ROOT/Sources/KeyboardCleaner/SettingsView.swift"
   "$ROOT/Sources/KeyboardCleaner/OnboardingView.swift"

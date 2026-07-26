@@ -29,6 +29,7 @@ struct SettingsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     launchSection
+                    lockExperienceSection
                     emergencySection
                     accessibilitySection
                 }
@@ -97,6 +98,48 @@ struct SettingsView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+
+    // MARK: - While locked
+
+    private var lockExperienceSection: some View {
+        settingsCard(title: "While locked", icon: "sparkles") {
+            settingsToggle(
+                "Full-screen overlay",
+                "Dim the screen and show a clear “locked” badge",
+                isOn: Binding(
+                    get: { settings.showLockOverlay },
+                    set: { settings.showLockOverlay = $0 }
+                )
+            )
+
+            Divider().opacity(0.3)
+
+            settingsToggle(
+                "Sound & haptics",
+                "Play a cue when you lock or unlock",
+                isOn: Binding(
+                    get: { settings.feedbackEnabled },
+                    set: { settings.feedbackEnabled = $0 }
+                )
+            )
+        }
+    }
+
+    private func settingsToggle(_ title: String, _ subtitle: String, isOn: Binding<Bool>) -> some View {
+        Toggle(isOn: isOn) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(ink)
+                Text(subtitle)
+                    .font(.system(size: 11.5, weight: .regular, design: .rounded))
+                    .foregroundStyle(ink.opacity(0.45))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .toggleStyle(.switch)
+        .tint(SettingsTheme.accent)
     }
 
     // MARK: - Emergency

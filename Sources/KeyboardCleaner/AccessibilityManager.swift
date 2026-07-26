@@ -2,13 +2,13 @@ import ApplicationServices
 import AppKit
 import Foundation
 
-/// Erişilebilirlik izni olmadan CGEventTap klavye olaylarını yakalayamaz / engelleyemez.
+/// Without Accessibility permission, the CGEventTap can't observe or block keyboard events.
 enum AccessibilityManager {
     static var isTrusted: Bool {
         AXIsProcessTrusted()
     }
 
-    /// Sistem Ayarları'nda izin diyaloğunu (veya paneli) açar.
+    /// Opens the permission prompt (or the Accessibility pane in System Settings).
     @discardableResult
     static func requestTrust(prompt: Bool = true) -> Bool {
         if prompt {
@@ -19,7 +19,7 @@ enum AccessibilityManager {
     }
 
     static func openSystemSettings() {
-        // macOS 13+ Gizlilik & Güvenlik > Erişilebilirlik
+        // macOS 13+ Privacy & Security > Accessibility
         let urls = [
             "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
             "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility"

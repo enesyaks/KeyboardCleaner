@@ -14,6 +14,7 @@ final class AppState {
     var settings = AppSettings()
 
     private var timer: Timer?
+    private let overlay = LockOverlayController()
 
     static var needsOnboarding: Bool {
         !UserDefaults.standard.bool(forKey: onboardingKey)
@@ -36,12 +37,23 @@ final class AppState {
             self?.syncBlockerSettings()
             self?.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: Self.onboardingKey)
             self?.refreshTrust()
+            self?.syncOverlay()
         }
     }
 
     func syncBlockerSettings() {
         KeyboardBlocker.shared.emergencyShortcut = settings.emergencyShortcut
         KeyboardBlocker.shared.emergencyUnlockEnabled = settings.emergencyUnlockEnabled
+    }
+
+    /// Reconcile the overlay with the current lock state and preference,
+    /// so toggling the setting takes effect immediately, even mid-session.
+    func syncOverlay() {
+        guard isLocked, settings.showLockOverlay else {
+            overlay.hide()
+            return
+        }
+        overlay.show(state: self)
     }
 
     func completeOnboarding() {
@@ -88,14 +100,19 @@ final class AppState {
         sessionStartedAt = Date()
         elapsedSeconds = 0
         startTimer()
+        if settings.feedbackEnabled { Feedback.lock() }
+        if settings.showLockOverlay { overlay.show(state: self) }
         return true
     }
 
     func unlock() {
+        let wasLocked = isLocked
         KeyboardBlocker.shared.stop()
+        overlay.hide()
         isLocked = false
         stopTimer()
         sessionStartedAt = nil
+        if wasLocked, settings.feedbackEnabled { Feedback.unlock() }
     }
 
     func toggle() {

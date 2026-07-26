@@ -13,6 +13,8 @@ final class AppSettings {
         static let emergencyShift = "kc.emergency.shift"
         static let emergencyCommand = "kc.emergency.command"
         static let emergencyEnabled = "kc.emergency.enabled"
+        static let showOverlay = "kc.showOverlay"
+        static let feedbackEnabled = "kc.feedbackEnabled"
     }
 
     private var isApplyingLaunchPreference = false
@@ -38,6 +40,21 @@ final class AppSettings {
         didSet { persistShortcut() }
     }
 
+    /// Dim the screen and show a large "locked" badge while the keyboard is locked.
+    var showLockOverlay: Bool {
+        didSet {
+            UserDefaults.standard.set(showLockOverlay, forKey: Keys.showOverlay)
+            NotificationCenter.default.post(name: .keyboardCleanerPreferencesChanged, object: nil)
+        }
+    }
+
+    /// Play a sound + haptic cue when locking and unlocking.
+    var feedbackEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(feedbackEnabled, forKey: Keys.feedbackEnabled)
+        }
+    }
+
     init() {
         let defaults = UserDefaults.standard
         let systemLogin = LaunchAtLogin.isEnabled
@@ -58,6 +75,8 @@ final class AppSettings {
         launchAtLoginError = nil
         emergencyUnlockEnabled = defaults.object(forKey: Keys.emergencyEnabled) as? Bool ?? true
         emergencyShortcut = shortcut
+        showLockOverlay = defaults.object(forKey: Keys.showOverlay) as? Bool ?? true
+        feedbackEnabled = defaults.object(forKey: Keys.feedbackEnabled) as? Bool ?? true
         isApplyingLaunchPreference = false
 
         defaults.set(systemLogin, forKey: Keys.launchAtLogin)

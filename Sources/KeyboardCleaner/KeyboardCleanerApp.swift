@@ -19,7 +19,11 @@ struct KeyboardCleanerApp: App {
                     state.syncBlockerSettings()
                 }
         } label: {
-            MenuBarLabel(isLocked: state.isLocked, isTrusted: state.isTrusted)
+            MenuBarLabel(
+                isLocked: state.isLocked,
+                isTrusted: state.isTrusted,
+                elapsed: state.formattedElapsed
+            )
         }
         .menuBarExtraStyle(.window)
     }
@@ -28,11 +32,20 @@ struct KeyboardCleanerApp: App {
 private struct MenuBarLabel: View {
     let isLocked: Bool
     let isTrusted: Bool
+    let elapsed: String
 
     var body: some View {
-        Image(systemName: iconName)
-            .symbolRenderingMode(.hierarchical)
-            .accessibilityLabel(accessibilityText)
+        HStack(spacing: 4) {
+            Image(systemName: iconName)
+                .symbolRenderingMode(.hierarchical)
+                .symbolEffect(.pulse, options: .repeating, isActive: isLocked)
+
+            if isLocked {
+                Text(elapsed)
+                    .font(.system(size: 11, weight: .semibold, design: .rounded).monospacedDigit())
+            }
+        }
+        .accessibilityLabel(accessibilityText)
     }
 
     private var iconName: String {
@@ -42,7 +55,7 @@ private struct MenuBarLabel: View {
 
     private var accessibilityText: String {
         if !isTrusted { return "KeyboardCleaner — permission needed" }
-        return isLocked ? "KeyboardCleaner — locked" : "KeyboardCleaner"
+        return isLocked ? "KeyboardCleaner — locked, \(elapsed)" : "KeyboardCleaner"
     }
 }
 

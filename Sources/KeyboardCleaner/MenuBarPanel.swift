@@ -271,6 +271,7 @@ struct MenuBarPanel: View {
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(state.isLocked ? Theme.lock : Theme.accent)
                 .contentTransition(.symbolEffect(.replace))
+                .symbolEffect(.pulse, options: .repeating, isActive: state.isLocked)
                 .scaleEffect(state.isLocked ? 1.05 : 1)
         }
     }
