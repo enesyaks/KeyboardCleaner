@@ -1,6 +1,6 @@
 cask "kbcler" do
-  version "1.0.0"
-  sha256 "d5c6e0aeb7ede7cb0a003a12e9a0c5529ce9d7db8ece7aa0ce8718edd6d25573"
+  version "1.1.0"
+  sha256 "f0df80530aa449cbf7a8896f3f6c3a84806d2bb05e1dae6bc64026fc33587601"
 
   url "https://github.com/enesyaks/KeyboardCleaner/releases/download/v#{version}/KeyboardCleaner-#{version}.zip"
   name "KeyboardCleaner"
@@ -22,7 +22,7 @@ cask "kbcler" do
 
   zap trash: "~/Library/Preferences/com.enes.KeyboardCleaner.plist"
 
-  caveats <<~EOS
+  caveats <<~CAVEATS
     KeyboardCleaner is open-source and ad-hoc signed (not notarized by Apple).
     If macOS still blocks it on first launch, remove the quarantine flag manually:
 
@@ -31,5 +31,5 @@ cask "kbcler" do
     Or reinstall without quarantine:
 
       brew reinstall --cask --no-quarantine kbcler
-  EOS
+  CAVEATS
 end
