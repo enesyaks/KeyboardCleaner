@@ -7,7 +7,7 @@ cask "keyboard-cleaner" do
   desc "Lock your Mac keyboard while you clean it"
   homepage "https://github.com/enesyaks/KeyboardCleaner"
 
-  depends_on macos: ">= :sonoma"
+  depends_on macos: :sonoma
 
   app "KeyboardCleaner.app"
 
