@@ -1,4 +1,4 @@
-cask "enes-keyboard-cleaner" do
+cask "kbcler" do
   version "1.0.0"
   sha256 "d5c6e0aeb7ede7cb0a003a12e9a0c5529ce9d7db8ece7aa0ce8718edd6d25573"
 
