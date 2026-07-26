@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Create a GitHub Release and upload the packaged zip.
-# Updates Casks/keyboard-cleaner.rb with version + sha256.
+# Updates Casks/enes-keyboard-cleaner.rb with version + sha256.
 #
 # Prerequisites:
 #   - git remote pointing at https://github.com/enesyaks/KeyboardCleaner.git
@@ -18,7 +18,7 @@ APP_NAME="KeyboardCleaner"
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$ROOT/Resources/Info.plist")"
 ZIP_NAME="${APP_NAME}-${VERSION}.zip"
 ZIP_PATH="$DIST_DIR/$ZIP_NAME"
-CASK_PATH="$ROOT/Casks/keyboard-cleaner.rb"
+CASK_PATH="$ROOT/Casks/enes-keyboard-cleaner.rb"
 TAG="v${VERSION}"
 SKIP_UPLOAD=0
 
@@ -36,7 +36,7 @@ SHA="$(shasum -a 256 "$ZIP_PATH" | awk '{print $1}')"
 
 echo "==> Updating Homebrew cask (version $VERSION, sha256 $SHA)"
 cat > "$CASK_PATH" <<EOF
-cask "keyboard-cleaner" do
+cask "enes-keyboard-cleaner" do
   version "${VERSION}"
   sha256 "${SHA}"
 
@@ -71,13 +71,13 @@ if ! command -v gh >/dev/null 2>&1; then
   echo "    4. Upload: $ZIP_PATH"
   echo "    Users can then:"
   echo "      brew tap enesyaks/keyboardcleaner https://github.com/enesyaks/KeyboardCleaner"
-  echo "      brew install --cask keyboard-cleaner"
+  echo "      brew install --cask enes-keyboard-cleaner"
   exit 0
 fi
 
 cd "$ROOT"
 if ! git diff --quiet -- "$CASK_PATH" 2>/dev/null || ! git diff --cached --quiet -- "$CASK_PATH" 2>/dev/null; then
-  echo "==> Tip: commit the updated Casks/keyboard-cleaner.rb before or after the release"
+  echo "==> Tip: commit the updated Casks/enes-keyboard-cleaner.rb before or after the release"
 fi
 
 echo "==> Creating GitHub release $TAG"
@@ -92,7 +92,7 @@ else
 ## Install with Homebrew
 \`\`\`bash
 brew tap enesyaks/keyboardcleaner https://github.com/enesyaks/KeyboardCleaner
-brew install --cask keyboard-cleaner
+brew install --cask enes-keyboard-cleaner
 \`\`\`
 
 ## Manual install
@@ -105,4 +105,4 @@ fi
 echo "==> Release published: https://github.com/enesyaks/KeyboardCleaner/releases/tag/$TAG"
 echo "    Install:"
 echo "      brew tap enesyaks/keyboardcleaner https://github.com/enesyaks/KeyboardCleaner"
-echo "      brew install --cask keyboard-cleaner"
+echo "      brew install --cask enes-keyboard-cleaner"

@@ -9,19 +9,25 @@ Menu bar app for macOS that locks your keyboard while you clean it. Mouse and tr
 
 ```bash
 brew tap enesyaks/keyboardcleaner https://github.com/enesyaks/KeyboardCleaner
-brew install --cask keyboard-cleaner
+brew install --cask enes-keyboard-cleaner
+```
+
+If Homebrew asks you to confirm a third-party tap/cask, type `y` to proceed. You can also install with the fully qualified name:
+
+```bash
+brew install --cask enesyaks/keyboardcleaner/enes-keyboard-cleaner
 ```
 
 Update later with:
 
 ```bash
-brew upgrade --cask keyboard-cleaner
+brew upgrade --cask enes-keyboard-cleaner
 ```
 
 Uninstall:
 
 ```bash
-brew uninstall --cask keyboard-cleaner
+brew uninstall --cask enes-keyboard-cleaner
 ```
 
 ## Manual install
@@ -52,7 +58,7 @@ open .build/KeyboardCleaner.app
 ```bash
 ./Scripts/package.sh
 ./Scripts/release.sh
-git add Casks/keyboard-cleaner.rb
+git add Casks/enes-keyboard-cleaner.rb
 git commit -m "Update Homebrew cask for v1.0.0"
 git push
 ```
