@@ -27,6 +27,27 @@ your menu bar.
 
 <br />
 
+<div align="center">
+
+<table>
+<tr>
+<td align="center" valign="top">
+<img src="Resources/mockups/panel.svg" width="220" alt="KeyboardCleaner menu bar panel with four lock modes" /><br />
+<sub><b>Menu bar panel</b> — pick a mode, lock, done</sub>
+</td>
+<td align="center" valign="top">
+<img src="Resources/mockups/overlay.svg" width="520" alt="Full-screen lock overlay with a live timer" /><br />
+<sub><b>Locked overlay</b> — clear status with a live timer</sub>
+</td>
+</tr>
+</table>
+
+<sub><i>UI preview, rendered from the app's own colors and layout</i></sub>
+
+</div>
+
+<br />
+
 ---
 
 ## 🧩 What is KeyboardCleaner?
