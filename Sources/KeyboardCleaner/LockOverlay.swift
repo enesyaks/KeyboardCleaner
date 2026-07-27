@@ -105,7 +105,7 @@ private struct LockOverlayView: View {
                     .font(.system(size: 26, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
 
-                Text(mode.overlaySubtitle)
+                Text(subtitle)
                     .font(.system(size: 14, weight: .medium, design: .rounded))
                     .foregroundStyle(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
@@ -164,11 +164,18 @@ private struct LockOverlayView: View {
         .background(Capsule().fill(.white.opacity(0.12)))
     }
 
+    private var subtitle: String {
+        if mode == .cleaning, state.activePointerBlocked {
+            return "Keyboard & trackpad are locked while you clean."
+        }
+        return mode.overlaySubtitle
+    }
+
     private var hintText: String {
         let shortcut = state.settings.emergencyShortcut.spacedDisplayString
-        // In pointer-blocking modes the menu bar can't be clicked, so the
+        // When the pointer is blocked the menu bar can't be clicked, so the
         // shortcut is the only way out and we say so.
-        if mode.blocksPointer {
+        if state.activePointerBlocked {
             return "Press \(shortcut) to unlock"
         }
         if state.settings.emergencyUnlockEnabled {

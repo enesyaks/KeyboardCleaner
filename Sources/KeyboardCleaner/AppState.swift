@@ -7,6 +7,9 @@ final class AppState {
 
     var isLocked = false
     var activeMode: LockMode = .cleaning
+    /// Whether the current lock also blocks the pointer (baby mode, or cleaning
+    /// with the "lock trackpad" option). Drives the "unlock only via shortcut" UI.
+    var activePointerBlocked = false
     var isTrusted = AccessibilityManager.isTrusted
     var lockError: String?
     var sessionStartedAt: Date?
@@ -91,13 +94,16 @@ final class AppState {
             return false
         }
 
-        KeyboardBlocker.shared.blocksPointer = mode.blocksPointer
+        let pointerBlocked = mode.blocksPointer
+            || (mode == .cleaning && settings.lockTrackpadWhileCleaning)
+        KeyboardBlocker.shared.blocksPointer = pointerBlocked
         guard KeyboardBlocker.shared.start() else {
             lockError = "Couldn’t start keyboard lock. Quit and reopen the app, then try again."
             return false
         }
 
         activeMode = mode
+        activePointerBlocked = pointerBlocked
         isLocked = true
         lockError = nil
         sessionStartedAt = Date()
@@ -114,6 +120,7 @@ final class AppState {
         KeyboardBlocker.shared.blocksPointer = false
         overlay.hide()
         isLocked = false
+        activePointerBlocked = false
         stopTimer()
         sessionStartedAt = nil
         if wasLocked, settings.feedbackEnabled { Feedback.unlock() }

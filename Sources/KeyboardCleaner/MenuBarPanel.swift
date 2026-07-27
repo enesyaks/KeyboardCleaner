@@ -218,6 +218,10 @@ struct MenuBarPanel: View {
         VStack(spacing: 14) {
             modeGrid
 
+            if selectedMode == .cleaning {
+                trackpadToggleRow
+            }
+
             Button {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                     _ = state.lock(mode: selectedMode)
@@ -232,10 +236,49 @@ struct MenuBarPanel: View {
             .buttonStyle(PanelButtonStyle(role: .primary, ink: ink, tint: selectedMode.tint))
 
             hintRow(
-                icon: selectedMode.blocksPointer ? "cursorarrow.slash" : "cursorarrow.click",
-                text: selectedMode.pickerHint
+                icon: willBlockPointer ? "cursorarrow.slash" : "cursorarrow.click",
+                text: pickerHintText
             )
         }
+    }
+
+    /// Whether starting the selected mode now would also block the pointer.
+    private var willBlockPointer: Bool {
+        selectedMode.blocksPointer
+            || (selectedMode == .cleaning && state.settings.lockTrackpadWhileCleaning)
+    }
+
+    private var pickerHintText: String {
+        if selectedMode == .cleaning, state.settings.lockTrackpadWhileCleaning {
+            return "Keyboard + trackpad locked, unlock with shortcut"
+        }
+        return selectedMode.pickerHint
+    }
+
+    private var trackpadToggleRow: some View {
+        Toggle(isOn: Binding(
+            get: { state.settings.lockTrackpadWhileCleaning },
+            set: { state.settings.lockTrackpadWhileCleaning = $0 }
+        )) {
+            HStack(spacing: 8) {
+                Image(systemName: "cursorarrow.slash")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(ink.opacity(0.5))
+                    .frame(width: 16)
+                Text("Also lock trackpad")
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(ink.opacity(0.72))
+            }
+        }
+        .toggleStyle(.switch)
+        .tint(LockMode.cleaning.tint)
+        .controlSize(.mini)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(ink.opacity(0.06))
+        )
     }
 
     private var modeGrid: some View {
@@ -320,7 +363,7 @@ struct MenuBarPanel: View {
 
     @ViewBuilder
     private var lockedHint: some View {
-        if state.settings.emergencyUnlockEnabled || state.activeMode.blocksPointer {
+        if state.settings.emergencyUnlockEnabled || state.activePointerBlocked {
             hintRow(
                 icon: "exclamationmark.keyboard",
                 text: "Emergency unlock  \(state.settings.emergencyShortcut.spacedDisplayString)"

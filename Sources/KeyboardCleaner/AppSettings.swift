@@ -15,6 +15,7 @@ final class AppSettings {
         static let emergencyEnabled = "kc.emergency.enabled"
         static let showOverlay = "kc.showOverlay"
         static let feedbackEnabled = "kc.feedbackEnabled"
+        static let lockTrackpadWhileCleaning = "kc.lockTrackpadWhileCleaning"
     }
 
     private var isApplyingLaunchPreference = false
@@ -55,6 +56,14 @@ final class AppSettings {
         }
     }
 
+    /// In Cleaning mode, also block the mouse / trackpad (wipe the whole surface).
+    /// The emergency shortcut stays the way out. Off by default.
+    var lockTrackpadWhileCleaning: Bool {
+        didSet {
+            UserDefaults.standard.set(lockTrackpadWhileCleaning, forKey: Keys.lockTrackpadWhileCleaning)
+        }
+    }
+
     init() {
         let defaults = UserDefaults.standard
         let systemLogin = LaunchAtLogin.isEnabled
@@ -77,6 +86,7 @@ final class AppSettings {
         emergencyShortcut = shortcut
         showLockOverlay = defaults.object(forKey: Keys.showOverlay) as? Bool ?? true
         feedbackEnabled = defaults.object(forKey: Keys.feedbackEnabled) as? Bool ?? true
+        lockTrackpadWhileCleaning = defaults.object(forKey: Keys.lockTrackpadWhileCleaning) as? Bool ?? false
         isApplyingLaunchPreference = false
 
         defaults.set(systemLogin, forKey: Keys.launchAtLogin)
