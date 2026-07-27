@@ -7,15 +7,18 @@ import SwiftUI
 /// level so the status item and its popover stay reachable.
 final class LockOverlayController {
     private var windows: [NSWindow] = []
+    private var dismissTimer: Timer?
 
     var isVisible: Bool { !windows.isEmpty }
 
-    func show(state: AppState) {
+    func show(state: AppState, mode: LockMode) {
+        dismissTimer?.invalidate()
+        dismissTimer = nil
         guard windows.isEmpty else { return }
         let level = NSWindow.Level(rawValue: NSWindow.Level.mainMenu.rawValue - 1)
 
         for screen in NSScreen.screens {
-            let hosting = NSHostingView(rootView: LockOverlayView(state: state))
+            let hosting = NSHostingView(rootView: LockOverlayView(state: state, mode: mode))
             let window = NSWindow(
                 contentRect: screen.frame,
                 styleMask: .borderless,
@@ -41,9 +44,19 @@ final class LockOverlayController {
             }
             windows.append(window)
         }
+
+        // Cleaning keeps the overlay up; other modes only flash it as a
+        // confirmation so it never covers the video / screen being used.
+        if !mode.usesPersistentOverlay {
+            dismissTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { [weak self] _ in
+                self?.hide()
+            }
+        }
     }
 
     func hide() {
+        dismissTimer?.invalidate()
+        dismissTimer = nil
         guard !windows.isEmpty else { return }
         let closing = windows
         windows.removeAll()
@@ -60,10 +73,11 @@ final class LockOverlayController {
 
 private struct LockOverlayView: View {
     @Bindable var state: AppState
+    let mode: LockMode
     @Environment(\.colorScheme) private var scheme
     @State private var pulse = false
 
-    private let lock = Color(hex: 0xE07A3D)
+    private var lock: Color { mode.tint }
 
     var body: some View {
         ZStack {
@@ -87,19 +101,22 @@ private struct LockOverlayView: View {
             glyph
 
             VStack(spacing: 8) {
-                Text("Keyboard locked")
+                Text(mode.title)
                     .font(.system(size: 26, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
 
-                Text("Clean away — mouse and trackpad still work.")
+                Text(mode.overlaySubtitle)
                     .font(.system(size: 14, weight: .medium, design: .rounded))
                     .foregroundStyle(.white.opacity(0.7))
+                    .multilineTextAlignment(.center)
             }
 
-            Text(state.formattedElapsed)
-                .font(.system(size: 42, weight: .semibold, design: .rounded).monospacedDigit())
-                .foregroundStyle(.white)
-                .contentTransition(.numericText())
+            if mode.usesPersistentOverlay {
+                Text(state.formattedElapsed)
+                    .font(.system(size: 42, weight: .semibold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.white)
+                    .contentTransition(.numericText())
+            }
 
             hint
         }
@@ -129,7 +146,7 @@ private struct LockOverlayView: View {
                 .fill(lock.opacity(0.16))
                 .frame(width: 104, height: 104)
 
-            Image(systemName: "lock.fill")
+            Image(systemName: mode.icon)
                 .font(.system(size: 42, weight: .semibold))
                 .foregroundStyle(lock)
         }
@@ -137,7 +154,7 @@ private struct LockOverlayView: View {
 
     private var hint: some View {
         HStack(spacing: 8) {
-            Image(systemName: state.settings.emergencyUnlockEnabled ? "keyboard" : "cursorarrow.rays")
+            Image(systemName: "keyboard")
             Text(hintText)
         }
         .font(.system(size: 12.5, weight: .semibold, design: .rounded))
@@ -148,18 +165,15 @@ private struct LockOverlayView: View {
     }
 
     private var hintText: String {
+        let shortcut = state.settings.emergencyShortcut.spacedDisplayString
+        // In pointer-blocking modes the menu bar can't be clicked, so the
+        // shortcut is the only way out and we say so.
+        if mode.blocksPointer {
+            return "Press \(shortcut) to unlock"
+        }
         if state.settings.emergencyUnlockEnabled {
-            return "Press \(state.settings.emergencyShortcut.spacedDisplayString) or use the menu bar to unlock"
+            return "Press \(shortcut) or use the menu bar to unlock"
         }
         return "Use the menu bar icon to unlock"
-    }
-}
-
-private extension Color {
-    init(hex: UInt32, opacity: Double = 1) {
-        let r = Double((hex >> 16) & 0xFF) / 255
-        let g = Double((hex >> 8) & 0xFF) / 255
-        let b = Double(hex & 0xFF) / 255
-        self.init(.sRGB, red: r, green: g, blue: b, opacity: opacity)
     }
 }

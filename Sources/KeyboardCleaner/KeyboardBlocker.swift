@@ -15,7 +15,21 @@ final class KeyboardBlocker {
     var emergencyShortcut: KeyChord = .default
     var emergencyUnlockEnabled = true
 
+    /// When true, mouse / trackpad events are swallowed too (baby / pet mode).
+    /// Set this before calling `start()`; it decides the event-tap mask.
+    var blocksPointer = false
+
     var onEmergencyUnlock: (() -> Void)?
+
+    /// Pointer events swallowed in pointer-blocking modes. `mouseMoved` is left
+    /// alone so the cursor still tracks — only clicks, drags and scrolling die.
+    private static let pointerEventTypes: [CGEventType] = [
+        .leftMouseDown, .leftMouseUp,
+        .rightMouseDown, .rightMouseUp,
+        .otherMouseDown, .otherMouseUp,
+        .leftMouseDragged, .rightMouseDragged, .otherMouseDragged,
+        .scrollWheel
+    ]
 
     private init() {}
 
@@ -24,11 +38,17 @@ final class KeyboardBlocker {
         guard AccessibilityManager.isTrusted else { return false }
 
         let systemDefined = CGEventType(rawValue: 14)!
-        let mask =
+        var mask =
             (1 << CGEventType.keyDown.rawValue)
             | (1 << CGEventType.keyUp.rawValue)
             | (1 << CGEventType.flagsChanged.rawValue)
             | (1 << systemDefined.rawValue)
+
+        if blocksPointer {
+            for type in Self.pointerEventTypes {
+                mask |= (1 << type.rawValue)
+            }
+        }
 
         let refcon = Unmanaged.passUnretained(self).toOpaque()
 
@@ -82,7 +102,9 @@ final class KeyboardBlocker {
             return Unmanaged.passUnretained(event)
         }
 
-        if type == .keyDown, emergencyUnlockEnabled, matchesEmergencyUnlock(event) {
+        // The emergency shortcut is the only escape when the pointer is blocked,
+        // so honor it even if the user turned the toggle off for that session.
+        if type == .keyDown, emergencyUnlockEnabled || blocksPointer, matchesEmergencyUnlock(event) {
             DispatchQueue.main.async { [weak self] in
                 self?.onEmergencyUnlock?()
             }
@@ -94,6 +116,10 @@ final class KeyboardBlocker {
         }
 
         if type == .keyDown || type == .keyUp || type == .flagsChanged {
+            return nil
+        }
+
+        if blocksPointer, Self.pointerEventTypes.contains(type) {
             return nil
         }
 

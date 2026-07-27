@@ -6,6 +6,7 @@ struct MenuBarPanel: View {
     @Bindable var state: AppState
     @Environment(\.colorScheme) private var colorScheme
     @State private var route: PanelRoute = .home
+    @State private var selectedMode: LockMode = .cleaning
 
     private enum PanelRoute: Equatable {
         case home
@@ -95,7 +96,7 @@ struct MenuBarPanel: View {
                     .fill(headerBadgeColor.opacity(0.16))
                     .frame(width: 36, height: 36)
 
-                Image(systemName: state.isLocked ? "lock.fill" : "keyboard.fill")
+                Image(systemName: state.isLocked ? state.activeMode.icon : "keyboard.fill")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(headerBadgeColor)
                     .contentTransition(.symbolEffect(.replace))
@@ -119,12 +120,12 @@ struct MenuBarPanel: View {
 
     private var statusCaption: String {
         if !state.isTrusted { return "Setup required" }
-        return state.isLocked ? "Cleaning mode on" : "Keyboard protection"
+        return state.isLocked ? "\(state.activeMode.shortTitle) • locked" : "Keyboard protection"
     }
 
     private var headerBadgeColor: Color {
         if !state.isTrusted { return Theme.warn }
-        return state.isLocked ? Theme.lock : Theme.accent
+        return state.isLocked ? state.activeMode.tint : Theme.accent
     }
 
     private var statusPill: some View {
@@ -144,7 +145,7 @@ struct MenuBarPanel: View {
 
     private var pillForeground: Color {
         if !state.isTrusted { return Theme.warn }
-        return state.isLocked ? Theme.lock : Theme.accent
+        return state.isLocked ? state.activeMode.tint : Theme.accent
     }
 
     // MARK: - Permission
@@ -196,56 +197,10 @@ struct MenuBarPanel: View {
 
     private var lockContent: some View {
         VStack(spacing: 16) {
-            HStack(alignment: .center, spacing: 14) {
-                lockGlyph
-
-                VStack(alignment: .leading, spacing: 4) {
-                    if state.isLocked {
-                        Text(state.formattedElapsed)
-                            .font(.system(size: 28, weight: .semibold, design: .rounded))
-                            .monospacedDigit()
-                            .foregroundStyle(ink)
-                            .contentTransition(.numericText())
-
-                        Text("Cleaning time")
-                            .font(.system(size: 11.5, weight: .medium, design: .rounded))
-                            .foregroundStyle(ink.opacity(0.45))
-                    } else {
-                        Text("Lock your keyboard")
-                            .font(.system(size: 16, weight: .semibold, design: .rounded))
-                            .foregroundStyle(ink)
-
-                        Text("Keys are disabled;\nmouse keeps working.")
-                            .font(.system(size: 12, weight: .regular, design: .rounded))
-                            .foregroundStyle(ink.opacity(0.55))
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-
-                Spacer(minLength: 0)
-            }
-
-            Button {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                    state.toggle()
-                }
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: state.isLocked ? "lock.open.fill" : "lock.fill")
-                    Text(state.isLocked ? "Unlock" : "Lock Keyboard")
-                }
-                .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(PanelButtonStyle(role: state.isLocked ? .unlock : .primary, ink: ink))
-
             if state.isLocked {
-                if state.settings.emergencyUnlockEnabled {
-                    hintRow(icon: "exclamationmark.keyboard", text: state.emergencyShortcutLabel)
-                } else {
-                    hintRow(icon: "exclamationmark.triangle", text: "Emergency unlock is off")
-                }
+                lockedBody
             } else {
-                hintRow(icon: "cursorarrow.click", text: "Trackpad and mouse stay active")
+                unlockedBody
             }
 
             if let error = state.lockError {
@@ -257,20 +212,137 @@ struct MenuBarPanel: View {
         }
     }
 
+    // MARK: Unlocked — mode picker
+
+    private var unlockedBody: some View {
+        VStack(spacing: 14) {
+            modeGrid
+
+            Button {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                    _ = state.lock(mode: selectedMode)
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "lock.fill")
+                    Text("Start \(selectedMode.shortTitle)")
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(PanelButtonStyle(role: .primary, ink: ink, tint: selectedMode.tint))
+
+            hintRow(
+                icon: selectedMode.blocksPointer ? "cursorarrow.slash" : "cursorarrow.click",
+                text: selectedMode.pickerHint
+            )
+        }
+    }
+
+    private var modeGrid: some View {
+        LazyVGrid(
+            columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)],
+            spacing: 8
+        ) {
+            ForEach(LockMode.allCases) { mode in
+                modeCard(mode)
+            }
+        }
+    }
+
+    private func modeCard(_ mode: LockMode) -> some View {
+        let isSelected = selectedMode == mode
+        return Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
+                selectedMode = mode
+            }
+        } label: {
+            VStack(spacing: 6) {
+                Image(systemName: mode.icon)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(isSelected ? mode.tint : ink.opacity(0.5))
+
+                Text(mode.shortTitle)
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundStyle(isSelected ? ink : ink.opacity(0.55))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(isSelected ? mode.tint.opacity(0.14) : ink.opacity(0.05))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(isSelected ? mode.tint.opacity(0.5) : Color.clear, lineWidth: 1.5)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: Locked
+
+    private var lockedBody: some View {
+        VStack(spacing: 16) {
+            HStack(alignment: .center, spacing: 14) {
+                lockGlyph
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(state.formattedElapsed)
+                        .font(.system(size: 28, weight: .semibold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(ink)
+                        .contentTransition(.numericText())
+
+                    Text("\(state.activeMode.title) · running")
+                        .font(.system(size: 11.5, weight: .medium, design: .rounded))
+                        .foregroundStyle(ink.opacity(0.45))
+                }
+
+                Spacer(minLength: 0)
+            }
+
+            Button {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                    state.unlock()
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "lock.open.fill")
+                    Text("Unlock")
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(PanelButtonStyle(role: .unlock, ink: ink, tint: state.activeMode.tint))
+
+            lockedHint
+        }
+    }
+
+    @ViewBuilder
+    private var lockedHint: some View {
+        if state.settings.emergencyUnlockEnabled || state.activeMode.blocksPointer {
+            hintRow(
+                icon: "exclamationmark.keyboard",
+                text: "Emergency unlock  \(state.settings.emergencyShortcut.spacedDisplayString)"
+            )
+        } else {
+            hintRow(icon: "exclamationmark.triangle", text: "Emergency unlock is off")
+        }
+    }
+
     private var lockGlyph: some View {
         ZStack {
             Circle()
-                .fill((state.isLocked ? Theme.lock : Theme.accent).opacity(0.12))
+                .fill(state.activeMode.tint.opacity(0.12))
                 .frame(width: 56, height: 56)
 
             Circle()
-                .stroke((state.isLocked ? Theme.lock : Theme.accent).opacity(0.35), lineWidth: 2)
+                .stroke(state.activeMode.tint.opacity(0.35), lineWidth: 2)
                 .frame(width: 56, height: 56)
 
-            Image(systemName: state.isLocked ? "lock.fill" : "lock.open.fill")
+            Image(systemName: state.activeMode.icon)
                 .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(state.isLocked ? Theme.lock : Theme.accent)
-                .contentTransition(.symbolEffect(.replace))
+                .foregroundStyle(state.activeMode.tint)
                 .symbolEffect(.pulse, options: .repeating, isActive: state.isLocked)
                 .scaleEffect(state.isLocked ? 1.05 : 1)
         }
@@ -368,6 +440,7 @@ private struct PanelButtonStyle: ButtonStyle {
     enum Role { case primary, secondary, unlock }
     var role: Role = .primary
     var ink: Color = Theme.ink
+    var tint: Color = Theme.accent
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -398,8 +471,7 @@ private struct PanelButtonStyle: ButtonStyle {
 
     private var background: Color {
         switch role {
-        case .primary: return Theme.accent
-        case .unlock: return Theme.lock
+        case .primary, .unlock: return tint
         case .secondary: return ink.opacity(0.08)
         }
     }

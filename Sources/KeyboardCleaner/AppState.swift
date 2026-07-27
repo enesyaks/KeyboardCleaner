@@ -6,6 +6,7 @@ final class AppState {
     static let onboardingKey = "kc.hasCompletedOnboarding"
 
     var isLocked = false
+    var activeMode: LockMode = .cleaning
     var isTrusted = AccessibilityManager.isTrusted
     var lockError: String?
     var sessionStartedAt: Date?
@@ -53,7 +54,7 @@ final class AppState {
             overlay.hide()
             return
         }
-        overlay.show(state: self)
+        overlay.show(state: self, mode: activeMode)
     }
 
     func completeOnboarding() {
@@ -82,7 +83,7 @@ final class AppState {
     }
 
     @discardableResult
-    func lock() -> Bool {
+    func lock(mode: LockMode = .cleaning) -> Bool {
         refreshTrust()
         syncBlockerSettings()
         guard isTrusted else {
@@ -90,37 +91,32 @@ final class AppState {
             return false
         }
 
+        KeyboardBlocker.shared.blocksPointer = mode.blocksPointer
         guard KeyboardBlocker.shared.start() else {
             lockError = "Couldn’t start keyboard lock. Quit and reopen the app, then try again."
             return false
         }
 
+        activeMode = mode
         isLocked = true
         lockError = nil
         sessionStartedAt = Date()
         elapsedSeconds = 0
         startTimer()
         if settings.feedbackEnabled { Feedback.lock() }
-        if settings.showLockOverlay { overlay.show(state: self) }
+        if settings.showLockOverlay { overlay.show(state: self, mode: mode) }
         return true
     }
 
     func unlock() {
         let wasLocked = isLocked
         KeyboardBlocker.shared.stop()
+        KeyboardBlocker.shared.blocksPointer = false
         overlay.hide()
         isLocked = false
         stopTimer()
         sessionStartedAt = nil
         if wasLocked, settings.feedbackEnabled { Feedback.unlock() }
-    }
-
-    func toggle() {
-        if isLocked {
-            unlock()
-        } else {
-            lock()
-        }
     }
 
     private func startTimer() {

@@ -21,6 +21,7 @@ SOURCES=(
   "$ROOT/Sources/KeyboardCleaner/AppSettings.swift"
   "$ROOT/Sources/KeyboardCleaner/AppState.swift"
   "$ROOT/Sources/KeyboardCleaner/Feedback.swift"
+  "$ROOT/Sources/KeyboardCleaner/LockMode.swift"
   "$ROOT/Sources/KeyboardCleaner/LockOverlay.swift"
   "$ROOT/Sources/KeyboardCleaner/MenuBarPanel.swift"
   "$ROOT/Sources/KeyboardCleaner/SettingsView.swift"
@@ -53,8 +54,17 @@ echo -n 'APPL????' > "$APP_DIR/Contents/PkgInfo"
 
 chmod +x "$MACOS_DIR/$APP_NAME"
 
-echo "==> Ad-hoc code signing"
-codesign --force --deep --sign - "$APP_DIR" 2>/dev/null || true
+# Sign with a stable local identity when KBC_SIGN_IDENTITY is set and available
+# (keeps the Accessibility grant across rebuilds — see Scripts/dev-sign-setup.sh).
+# Releases leave the variable unset and stay ad-hoc.
+IDENTITY="${KBC_SIGN_IDENTITY:-}"
+if [[ -n "$IDENTITY" ]] && security find-identity -v -p codesigning 2>/dev/null | grep -q "$IDENTITY"; then
+  echo "==> Code signing with '$IDENTITY'"
+  codesign --force --deep --sign "$IDENTITY" "$APP_DIR"
+else
+  echo "==> Ad-hoc code signing"
+  codesign --force --deep --sign - "$APP_DIR" 2>/dev/null || true
+fi
 
 echo "==> Ready: $APP_DIR"
 echo "    Open with: open \"$APP_DIR\""
