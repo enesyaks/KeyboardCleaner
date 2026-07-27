@@ -27,7 +27,6 @@ final class LockOverlayController {
                 screen: screen
             )
             window.contentView = hosting
-            window.setFrame(screen.frame, display: false)
             window.isOpaque = false
             window.backgroundColor = .clear
             window.hasShadow = false
@@ -35,13 +34,13 @@ final class LockOverlayController {
             window.ignoresMouseEvents = true
             window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
             window.isReleasedWhenClosed = false
-            window.alphaValue = 0
+            // Show at full opacity right away — an alpha fade-in could get stuck
+            // invisible on some multi-display / clamshell setups. The SwiftUI
+            // content does its own subtle entrance animation.
+            window.alphaValue = 1
+            window.setFrame(screen.frame, display: true)
             window.orderFrontRegardless()
-
-            NSAnimationContext.runAnimationGroup { ctx in
-                ctx.duration = 0.28
-                window.animator().alphaValue = 1
-            }
+            window.displayIfNeeded()
             windows.append(window)
         }
 
