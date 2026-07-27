@@ -25,6 +25,11 @@ struct OnboardingView: View {
             body: "Mouse and trackpad keep working. Emergency unlock: ⌃⌥⇧⌘K. Accessibility permission is required on first use."
         ),
         .init(
+            symbol: "square.grid.2x2.fill",
+            title: "One lock,\nmany moments",
+            body: "Pick a mode for how you’re using your Mac — the keyboard locks to match."
+        ),
+        .init(
             symbol: "power.circle.fill",
             title: "Start with\nyour Mac",
             body: "Turn on Launch at login so KeyboardCleaner is ready in the menu bar every time you sign in."
@@ -32,6 +37,7 @@ struct OnboardingView: View {
     ]
 
     private var isLastPage: Bool { page == pages.count - 1 }
+    private var modesPageIndex: Int { pages.count - 2 }
 
     var body: some View {
         ZStack {
@@ -45,6 +51,8 @@ struct OnboardingView: View {
                 Group {
                     if isLastPage {
                         launchAtLoginPage
+                    } else if page == modesPageIndex {
+                        modesPage
                     } else {
                         pageContent(pages[page], index: page)
                     }
@@ -147,6 +155,68 @@ struct OnboardingView: View {
             Spacer(minLength: 8)
         }
         .padding(.horizontal, 36)
+    }
+
+    private var modesPage: some View {
+        VStack(spacing: 20) {
+            Spacer(minLength: 4)
+
+            VStack(spacing: 10) {
+                Text(pages[page].title)
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.onboardingInk)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(2)
+                    .tracking(-0.4)
+
+                Text(pages[page].body)
+                    .font(.system(size: 14.5, weight: .regular, design: .rounded))
+                    .foregroundStyle(Color.onboardingInk.opacity(0.58))
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 340)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            LazyVGrid(
+                columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
+                spacing: 12
+            ) {
+                ForEach(LockMode.allCases) { mode in
+                    VStack(spacing: 7) {
+                        Image(systemName: mode.icon)
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundStyle(mode.tint)
+                            .frame(height: 26)
+
+                        Text(mode.shortTitle)
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundStyle(Color.onboardingInk)
+
+                        Text(mode.pickerHint)
+                            .font(.system(size: 10.5, weight: .regular, design: .rounded))
+                            .foregroundStyle(Color.onboardingInk.opacity(0.5))
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .padding(.horizontal, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.white.opacity(0.72))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .strokeBorder(mode.tint.opacity(0.2), lineWidth: 1)
+                    )
+                }
+            }
+            .padding(.horizontal, 4)
+
+            Spacer(minLength: 4)
+        }
+        .padding(.horizontal, 36)
+        .opacity(appeared ? 1 : 0)
     }
 
     private var launchAtLoginPage: some View {

@@ -1,6 +1,6 @@
 cask "kbcler" do
-  version "1.2.0"
-  sha256 "7dec84da49f3e5c9803b8bd807499f2e173acfa82965fdb1f3fd802862fb14d7"
+  version "1.2.1"
+  sha256 "5dbfd17e3e6f5f063e90d97a8a0a41ab354e641de1c60df64ec773597af15067"
 
   url "https://github.com/enesyaks/KeyboardCleaner/releases/download/v#{version}/KeyboardCleaner-#{version}.zip"
   name "KeyboardCleaner"
