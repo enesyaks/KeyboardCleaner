@@ -127,7 +127,7 @@ final class AppSettings {
         } else {
             bossKeyShortcut = .bossDefault
         }
-        bossScreenStyle = BossStyle(rawValue: defaults.string(forKey: Keys.bossStyle) ?? "") ?? .blackout
+        bossScreenStyle = BossStyle(rawValue: defaults.string(forKey: Keys.bossStyle) ?? "") ?? .blur
         isApplyingLaunchPreference = false
 
         defaults.set(systemLogin, forKey: Keys.launchAtLogin)

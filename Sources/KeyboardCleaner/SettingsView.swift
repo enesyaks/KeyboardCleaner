@@ -157,7 +157,7 @@ struct SettingsView: View {
                     Text("Enable boss key")
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
                         .foregroundStyle(ink)
-                    Text("Instantly black out every screen — press again or Esc to reveal")
+                    Text("Instantly blur or hide every screen — press again or Esc to reveal")
                         .font(.system(size: 11.5, weight: .regular, design: .rounded))
                         .foregroundStyle(ink.opacity(0.45))
                         .fixedSize(horizontal: false, vertical: true)

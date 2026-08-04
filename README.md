@@ -129,7 +129,7 @@ A custom escape shortcut (default `⌃⌥⇧⌘K`) always frees you — even wit
 ### 🙈
 **Panic hide (boss key)**
 
-One global shortcut blacks out every screen — or shows a decoy screensaver.
+One global shortcut frosts your open windows — or blacks the screen, or shows a decoy.
 
 </td>
 <td width="33%" valign="top" align="center">
@@ -276,11 +276,11 @@ the only way out — by design.
 
 <br />
 
-Press the **boss key** — a global shortcut (default `⌥⌘.`) that instantly blacks out
-every display, over the menu bar and everything else. Press it again or hit **Esc** to
-reveal. Prefer camouflage? Switch the hidden screen to a **decoy screensaver** in
-Settings. It works anywhere, even when KeyboardCleaner is in the background, and needs
-no special permission.
+Press the **boss key** — a global shortcut (default `⌥⌘.`) that instantly **frosts every
+open window** so it's unreadable, while your desktop stays sharp. Press it again or hit
+**Esc** to reveal. Prefer something else? Switch the hidden screen to a full **black
+screen** or a **decoy screensaver** in Settings. It works anywhere, even when
+KeyboardCleaner is in the background, and needs no special permission.
 
 </details>
 
