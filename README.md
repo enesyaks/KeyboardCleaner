@@ -62,8 +62,9 @@ gets in the way:
 - 🐱 **Keeping a cat, dog, or pet** from walking across the keys
 - 🎬 **Watching a movie** without a stray keypress pausing or interrupting it
 - 🤝 **Passing your laptop to someone** while keeping the keyboard locked
+- 🙈 **Hiding your screen instantly** when someone walks up behind you — a global "boss key"
 
-No Dock icon, no account, no tracking — a single-purpose utility that does one thing well.
+No Dock icon, no account, no tracking — a focused utility that does its jobs well.
 
 <br />
 
@@ -125,10 +126,10 @@ A custom escape shortcut (default `⌃⌥⇧⌘K`) always frees you — even wit
 </td>
 <td width="33%" valign="top" align="center">
 
-### 🖥
-**Full-screen overlay**
+### 🙈
+**Panic hide (boss key)**
 
-A clear "locked" badge with a live timer so you always know the state.
+One global shortcut blacks out every screen — or shows a decoy screensaver.
 
 </td>
 <td width="33%" valign="top" align="center">
@@ -267,6 +268,19 @@ mode to freeze the whole surface (great for wiping the palm rest and trackpad).
 Click **Unlock** in the menu bar, or press the **emergency shortcut** (`⌃⌥⇧⌘K` by
 default, fully customizable in Settings). When the pointer is locked, the shortcut is
 the only way out — by design.
+
+</details>
+
+<details>
+<summary><b>How do I quickly hide my screen if someone walks up behind me?</b></summary>
+
+<br />
+
+Press the **boss key** — a global shortcut (default `⌥⌘.`) that instantly blacks out
+every display, over the menu bar and everything else. Press it again or hit **Esc** to
+reveal. Prefer camouflage? Switch the hidden screen to a **decoy screensaver** in
+Settings. It works anywhere, even when KeyboardCleaner is in the background, and needs
+no special permission.
 
 </details>
 

@@ -19,6 +19,8 @@ final class AppState {
 
     private var timer: Timer?
     private let overlay = LockOverlayController()
+    private let panic = PanicScreenController()
+    private let bossHotKey = GlobalHotKey()
 
     static var needsOnboarding: Bool {
         !UserDefaults.standard.bool(forKey: onboardingKey)
@@ -30,6 +32,10 @@ final class AppState {
         KeyboardBlocker.shared.onEmergencyUnlock = { [weak self] in
             self?.unlock()
         }
+        bossHotKey.onPress = { [weak self] in
+            self?.panic.toggle()
+        }
+        configureBossKey()
         refreshTrust()
 
         NotificationCenter.default.addObserver(
@@ -39,9 +45,29 @@ final class AppState {
         ) { [weak self] _ in
             self?.settings.refreshLaunchAtLoginStatus()
             self?.syncBlockerSettings()
+            self?.configureBossKey()
             self?.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: Self.onboardingKey)
             self?.refreshTrust()
             self?.syncOverlay()
+        }
+    }
+
+    /// Register / unregister the global boss-key hotkey from current settings.
+    func configureBossKey() {
+        panic.shortcutLabel = settings.bossKeyShortcut.spacedDisplayString
+        panic.style = settings.bossScreenStyle
+        let chord = settings.bossKeyShortcut
+        if settings.bossKeyEnabled, chord.isValid {
+            bossHotKey.update(
+                keyCode: chord.keyCode,
+                control: chord.control,
+                option: chord.option,
+                shift: chord.shift,
+                command: chord.command
+            )
+        } else {
+            bossHotKey.unregister()
+            panic.hide()
         }
     }
 

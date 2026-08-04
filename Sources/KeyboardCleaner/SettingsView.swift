@@ -8,8 +8,10 @@ struct SettingsView: View {
 
     @Environment(\.colorScheme) private var colorScheme
     @State private var isRecordingShortcut = false
+    @State private var isRecordingBoss = false
     @State private var recorderMonitor: Any?
     @State private var shortcutError: String?
+    @State private var bossError: String?
 
     private var ink: Color {
         colorScheme == .dark ? Color(hex: 0xE8EEF0) : SettingsTheme.ink
@@ -30,6 +32,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 18) {
                     launchSection
                     lockExperienceSection
+                    bossSection
                     emergencySection
                     accessibilitySection
                 }
@@ -143,6 +146,102 @@ struct SettingsView: View {
     }
 
     // MARK: - Emergency
+
+    private var bossSection: some View {
+        settingsCard(title: "Panic hide (boss key)", icon: "eye.slash") {
+            Toggle(isOn: Binding(
+                get: { settings.bossKeyEnabled },
+                set: { settings.bossKeyEnabled = $0 }
+            )) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Enable boss key")
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(ink)
+                    Text("Instantly black out every screen — press again or Esc to reveal")
+                        .font(.system(size: 11.5, weight: .regular, design: .rounded))
+                        .foregroundStyle(ink.opacity(0.45))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .toggleStyle(.switch)
+            .tint(SettingsTheme.accent)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Hidden screen")
+                    .font(.system(size: 11.5, weight: .medium, design: .rounded))
+                    .foregroundStyle(ink.opacity(0.45))
+
+                Picker("", selection: Binding(
+                    get: { settings.bossScreenStyle },
+                    set: { settings.bossScreenStyle = $0 }
+                )) {
+                    ForEach(BossStyle.allCases) { style in
+                        Text(style.title).tag(style)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .disabled(!settings.bossKeyEnabled)
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Shortcut")
+                    .font(.system(size: 11.5, weight: .medium, design: .rounded))
+                    .foregroundStyle(ink.opacity(0.45))
+
+                Button {
+                    if isRecordingBoss { stopRecording() } else { startRecordingBoss() }
+                } label: {
+                    HStack {
+                        Text(isRecordingBoss ? "Press new shortcut…" : settings.bossKeyShortcut.spacedDisplayString)
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundStyle(isRecordingBoss ? SettingsTheme.accent : ink)
+                            .contentTransition(.opacity)
+
+                        Spacer()
+
+                        Image(systemName: isRecordingBoss ? "record.circle" : "pencil")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(isRecordingBoss ? SettingsTheme.lock : ink.opacity(0.35))
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 11)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(ink.opacity(isRecordingBoss ? 0.08 : 0.05))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .strokeBorder(
+                                isRecordingBoss ? SettingsTheme.accent.opacity(0.55) : ink.opacity(0.08),
+                                lineWidth: 1
+                            )
+                    )
+                }
+                .buttonStyle(.plain)
+                .disabled(!settings.bossKeyEnabled)
+
+                Text("Works anywhere, even when the app is in the background.")
+                    .font(.system(size: 11, weight: .regular, design: .rounded))
+                    .foregroundStyle(ink.opacity(0.4))
+
+                if let bossError {
+                    Text(bossError)
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(SettingsTheme.danger)
+                }
+
+                Button("Reset to default") {
+                    settings.bossKeyShortcut = .bossDefault
+                    bossError = nil
+                    stopRecording()
+                }
+                .font(.system(size: 11.5, weight: .medium, design: .rounded))
+                .foregroundStyle(SettingsTheme.accent)
+                .buttonStyle(.plain)
+            }
+        }
+    }
 
     private var emergencySection: some View {
         settingsCard(title: "Emergency unlock", icon: "keyboard") {
@@ -281,6 +380,7 @@ struct SettingsView: View {
     private func startRecording() {
         shortcutError = nil
         isRecordingShortcut = true
+        isRecordingBoss = false
         stopRecordingMonitorOnly()
 
         recorderMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
@@ -305,8 +405,37 @@ struct SettingsView: View {
         }
     }
 
+    private func startRecordingBoss() {
+        bossError = nil
+        isRecordingBoss = true
+        isRecordingShortcut = false
+        stopRecordingMonitorOnly()
+
+        recorderMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if event.keyCode == UInt16(kVK_Escape) {
+                DispatchQueue.main.async { stopRecording() }
+                return nil
+            }
+
+            guard let chord = KeyChord.from(event: event) else {
+                DispatchQueue.main.async {
+                    bossError = "Add a modifier key, then press a letter or number."
+                }
+                return nil
+            }
+
+            DispatchQueue.main.async {
+                settings.bossKeyShortcut = chord
+                bossError = nil
+                stopRecording()
+            }
+            return nil
+        }
+    }
+
     private func stopRecording() {
         isRecordingShortcut = false
+        isRecordingBoss = false
         stopRecordingMonitorOnly()
     }
 

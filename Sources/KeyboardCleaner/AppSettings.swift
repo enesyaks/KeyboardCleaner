@@ -16,6 +16,13 @@ final class AppSettings {
         static let showOverlay = "kc.showOverlay"
         static let feedbackEnabled = "kc.feedbackEnabled"
         static let lockTrackpadWhileCleaning = "kc.lockTrackpadWhileCleaning"
+        static let bossKeyEnabled = "kc.boss.enabled"
+        static let bossKeyCode = "kc.boss.keyCode"
+        static let bossControl = "kc.boss.control"
+        static let bossOption = "kc.boss.option"
+        static let bossShift = "kc.boss.shift"
+        static let bossCommand = "kc.boss.command"
+        static let bossStyle = "kc.boss.style"
     }
 
     private var isApplyingLaunchPreference = false
@@ -64,6 +71,26 @@ final class AppSettings {
         }
     }
 
+    /// "Boss key" — a global shortcut that instantly hides the whole screen.
+    var bossKeyEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(bossKeyEnabled, forKey: Keys.bossKeyEnabled)
+            NotificationCenter.default.post(name: .keyboardCleanerPreferencesChanged, object: nil)
+        }
+    }
+
+    var bossKeyShortcut: KeyChord {
+        didSet { persistBossShortcut() }
+    }
+
+    /// How the boss screen looks: plain black, or a decoy screensaver.
+    var bossScreenStyle: BossStyle {
+        didSet {
+            UserDefaults.standard.set(bossScreenStyle.rawValue, forKey: Keys.bossStyle)
+            NotificationCenter.default.post(name: .keyboardCleanerPreferencesChanged, object: nil)
+        }
+    }
+
     init() {
         let defaults = UserDefaults.standard
         let systemLogin = LaunchAtLogin.isEnabled
@@ -87,6 +114,20 @@ final class AppSettings {
         showLockOverlay = defaults.object(forKey: Keys.showOverlay) as? Bool ?? true
         feedbackEnabled = defaults.object(forKey: Keys.feedbackEnabled) as? Bool ?? true
         lockTrackpadWhileCleaning = defaults.object(forKey: Keys.lockTrackpadWhileCleaning) as? Bool ?? false
+
+        bossKeyEnabled = defaults.object(forKey: Keys.bossKeyEnabled) as? Bool ?? true
+        if let bossCode = defaults.object(forKey: Keys.bossKeyCode) as? Int {
+            bossKeyShortcut = KeyChord(
+                keyCode: UInt16(bossCode),
+                control: defaults.bool(forKey: Keys.bossControl),
+                option: defaults.bool(forKey: Keys.bossOption),
+                shift: defaults.bool(forKey: Keys.bossShift),
+                command: defaults.bool(forKey: Keys.bossCommand)
+            )
+        } else {
+            bossKeyShortcut = .bossDefault
+        }
+        bossScreenStyle = BossStyle(rawValue: defaults.string(forKey: Keys.bossStyle) ?? "") ?? .blackout
         isApplyingLaunchPreference = false
 
         defaults.set(systemLogin, forKey: Keys.launchAtLogin)
@@ -127,6 +168,16 @@ final class AppSettings {
         defaults.set(emergencyShortcut.command, forKey: Keys.emergencyCommand)
         NotificationCenter.default.post(name: .keyboardCleanerPreferencesChanged, object: nil)
     }
+
+    private func persistBossShortcut() {
+        let defaults = UserDefaults.standard
+        defaults.set(Int(bossKeyShortcut.keyCode), forKey: Keys.bossKeyCode)
+        defaults.set(bossKeyShortcut.control, forKey: Keys.bossControl)
+        defaults.set(bossKeyShortcut.option, forKey: Keys.bossOption)
+        defaults.set(bossKeyShortcut.shift, forKey: Keys.bossShift)
+        defaults.set(bossKeyShortcut.command, forKey: Keys.bossCommand)
+        NotificationCenter.default.post(name: .keyboardCleanerPreferencesChanged, object: nil)
+    }
 }
 
 struct KeyChord: Equatable, Sendable {
@@ -141,6 +192,15 @@ struct KeyChord: Equatable, Sendable {
         control: true,
         option: true,
         shift: true,
+        command: true
+    )
+
+    /// Default "boss key" / panic-hide shortcut: ⌥⌘.
+    static let bossDefault = KeyChord(
+        keyCode: UInt16(kVK_ANSI_Period),
+        control: false,
+        option: true,
+        shift: false,
         command: true
     )
 
@@ -232,6 +292,17 @@ struct KeyChord: Equatable, Sendable {
         case kVK_RightArrow: return "→"
         case kVK_UpArrow: return "↑"
         case kVK_DownArrow: return "↓"
+        case kVK_ANSI_Period: return "."
+        case kVK_ANSI_Comma: return ","
+        case kVK_ANSI_Slash: return "/"
+        case kVK_ANSI_Backslash: return "\\"
+        case kVK_ANSI_Grave: return "`"
+        case kVK_ANSI_Semicolon: return ";"
+        case kVK_ANSI_Quote: return "'"
+        case kVK_ANSI_LeftBracket: return "["
+        case kVK_ANSI_RightBracket: return "]"
+        case kVK_ANSI_Minus: return "-"
+        case kVK_ANSI_Equal: return "="
         default: return "Key\(keyCode)"
         }
     }
